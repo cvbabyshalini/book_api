@@ -32,9 +32,10 @@
 // update/add new author ✅
 
 // DELETE
-// delete a book
-// delete a author from a book
+// delete a book ✅
+// delete a author from a book ✅
 
+//------------------------------------------------------------------------------//
 
 // Author
 
@@ -53,6 +54,8 @@
 // Delete an author
 
 
+//------------------------------------------------------------------------------//
+
 // Publication
 
 // We need an API
@@ -69,6 +72,6 @@
 
 // DELETE
 // delete a book from publication
-// delete a publication
+// delete a publication -task
 
-//how the server serves the request
+//how does the server serves the request
