@@ -77,16 +77,16 @@ shapeAI.get("/a/:authors", (req, res) => {
     const getSpecificAuthorBooks = database.books.filter(
         (book) => book.authors.includes(parseInt(req.params.authors)),
     );
-  
+
     if (getSpecificAuthorBooks.length === 0) {
-      return res.json({
-        error: `No book found with the author name ${req.params.author}`,
-      });
+        return res.json({
+            error: `No book found with the author name ${req.params.author}`,
+        });
     }
-  
+
     return res.json({ books: getSpecificAuthorBooks });
-  });
-  
+});
+
 
 /* 
 Route            /author
@@ -144,16 +144,16 @@ shapeAI.get("/author/i/:isbn", (req, res) => {
     return res.json({ authors: getSpecificAuthors });
 }),
 
-/* 
-Route            /publications
-Description      get all publications
-Access           PUBLIC
-Parameters       NONE
-Method           GET
-*/
-shapeAI.get("/publications", (req, res) => {
-    return res.json({ publications: database.publications });
-});
+    /* 
+    Route            /publications
+    Description      get all publications
+    Access           PUBLIC
+    Parameters       NONE
+    Method           GET
+    */
+    shapeAI.get("/publications", (req, res) => {
+        return res.json({ publications: database.publications });
+    });
 
 /* 
 Route            /publications
@@ -198,20 +198,20 @@ shapeAI.get("/publications/i/:isbn", (req, res) => {
     return res.json({ publications: getSpecificPublications });
 }),
 
-/* 
-Route            /book/new
-Description      add new books
-Access           PUBLIC
-Parameters       NONE
-Method           POST
-*/
-shapeAI.post("/book/new", (req, res) => {
-    const { newBook } = req.body;
+    /* 
+    Route            /book/new
+    Description      add new books
+    Access           PUBLIC
+    Parameters       NONE
+    Method           POST
+    */
+    shapeAI.post("/book/new", (req, res) => {
+        const { newBook } = req.body;
 
-    database.books.push(newBook);
+        database.books.push(newBook);
 
-    return res.json({books: database.books, message: "book was added!"});
-});
+        return res.json({ books: database.books, message: "book was added!" });
+    });
 
 /* 
 Route            /author/new
@@ -221,12 +221,12 @@ Parameters       NONE
 Method           POST
 */
 
-shapeAI.post("/author/new",(req, res) => {
+shapeAI.post("/author/new", (req, res) => {
     const { newAuthor } = req.body;
 
     database.authors.push(newAuthor);
 
-    return res.json({authors: database.authors, message: "author was added!"});
+    return res.json({ authors: database.authors, message: "author was added!" });
 
 });
 
@@ -238,12 +238,12 @@ Parameters       NONE
 Method           POST
 */
 
-shapeAI.post("/publication/new",(req, res) => {
+shapeAI.post("/publication/new", (req, res) => {
     const { newPublication } = req.body;
 
     database.publications.push(newPublication);
 
-    return res.json({publication: database.publications, message: "publication was added!"});
+    return res.json({ publication: database.publications, message: "publication was added!" });
 
 });
 
@@ -256,13 +256,13 @@ Method           PUT
 */
 
 shapeAI.put("/book/update/:isbn", (req, res) => {
-     database.books.forEach((book) => {
-         if(book.ISBN === req.params.isbn) {
-             book.title = req.body.bookTitle;
-             return;
-         }
-     });
-     return res.json({ books: database.books });
+    database.books.forEach((book) => {
+        if (book.ISBN === req.params.isbn) {
+            book.title = req.body.bookTitle;
+            return;
+        }
+    });
+    return res.json({ books: database.books });
 });
 
 /* 
@@ -275,16 +275,16 @@ Method           PUT
 shapeAI.put("/book/author/update/:isbn", (req, res) => {
     //update the book database
     database.books.forEach((book) => {
-        if(book.ISBN === req.params.isbn) {
+        if (book.ISBN === req.params.isbn) {
             return book.authors.push(req.body.newAuthor);
         }
     });
 
     //update author database
     database.authors.forEach((author) => {
-       if(author.id === req.body.newAuthor){
-           return author.books.push(req.params.isbn);
-       }
+        if (author.id === req.body.newAuthor) {
+            return author.books.push(req.params.isbn);
+        }
     });
     return res.json({
         books: database.books,
@@ -303,7 +303,7 @@ Method           PUT
 
 shapeAI.put("/author/update/:isbn", (req, res) => {
     database.authors.forEach((author) => {
-        if(author.books.toString() === req.params.isbn) {
+        if (author.books.toString() === req.params.isbn) {
             author.name = req.body.authorName;
             return;
         }
@@ -321,12 +321,40 @@ Method           PUT
 
 shapeAI.put("/publication/update/:isbn", (req, res) => {
     database.publications.forEach((publication) => {
-        if(publication.books.toString() === req.params.isbn) {
+        if (publication.books.toString() === req.params.isbn) {
             publication.name = req.body.publicationName;
             return;
         }
     });
-    return res.json({publications: database.publications });
+    return res.json({ publications: database.publications });
 });
 
-    shapeAI.listen(3000, () => console.log("Server running!!😎"));
+/* 
+Route            /publication/update/book
+Description      update/add a new book to publication
+Access           PUBLIC
+Parameters       isbn
+Method           PUT
+*/
+shapeAI.put("/publication/update/book/:isbn", (req, res) => {
+    // update the publication database
+    database.publications.forEach((publication) => {
+        if (publication.id === req.body.pubId) {
+            return publications.books.push(req.params.isbn);
+        }
+    });
+    // update the book database
+    database.books.forEach((book) => {
+        if (book.ISBN === req.params.isbn) {
+            book.publication = req.body.pubId;
+            return;
+        }
+    });
+    return res.json({
+        books: database.books,
+        publications: database.publications,
+    message: "successfully updated publications",
+    });
+});
+
+shapeAI.listen(3000, () => console.log("Server running!!😎"));
