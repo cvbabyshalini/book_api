@@ -1,5 +1,7 @@
+require("dotenv").config();
 // Frame work
 const express = require("express");
+const mongoose = require("mongoose");
 
 // Database
 const database = require("./database/index");
@@ -10,6 +12,17 @@ const shapeAI = express();
 // Configurations
 shapeAI.use(express.json());
 
+// Establish database connection
+mongoose
+  .connect(process.env.MONGO_URL,
+    {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+        useFindAndModify: false,
+        useCreateIndex: true
+    }
+)
+.then(() => console.log("connection established!!!!!"));
 /* 
 Route            /
 Description      get all books
@@ -416,28 +429,28 @@ Method           DELETE
 shapeAI.delete("/publication/delete/book/:isbn/:pubId", (req, res) => {
     // update publication database
     database.publications.forEach((publication) => {
-      if (publication.id === parseInt(req.params.pubId)) {
-        const newBooksList = publication.books.filter(
-          (book) => book !== req.params.isbn
-        );
-  
-        publication.books = newBooksList;
-        return;
-      }
+        if (publication.id === parseInt(req.params.pubId)) {
+            const newBooksList = publication.books.filter(
+                (book) => book !== req.params.isbn
+            );
+
+            publication.books = newBooksList;
+            return;
+        }
     });
-  
+
     // update book database
     database.books.forEach((book) => {
-      if (book.ISBN === req.params.isbn) {
-        book.publication = 0; // no publication available
-        return;
-      }
+        if (book.ISBN === req.params.isbn) {
+            book.publication = 0; // no publication available
+            return;
+        }
     });
-  
+
     return res.json({
-      books: database.books,
-      publications: database.publications,
+        books: database.books,
+        publications: database.publications,
     });
-  });
+});
 
 shapeAI.listen(3000, () => console.log("Server running!!😎"));
