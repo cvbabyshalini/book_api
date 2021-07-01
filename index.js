@@ -20,15 +20,15 @@ shapeAI.use(express.json());
 
 // Establish database connection
 mongoose
-  .connect(process.env.MONGO_URL,
-    {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-        useFindAndModify: false,
-        useCreateIndex: true
-    }
-)
-.then(() => console.log("connection established!!!!!"));
+    .connect(process.env.MONGO_URL,
+        {
+            useNewUrlParser: true,
+            useUnifiedTopology: true,
+            useFindAndModify: false,
+            useCreateIndex: true
+        }
+    )
+    .then(() => console.log("connection established!!!!!"));
 /* 
 Route            /
 Description      get all books
@@ -51,8 +51,8 @@ Method           GET
 */
 
 shapeAI.get("/is/:isbn", async (req, res) => {
-   
-    const getSpecificBook = await BookModel.findOne({ISBN: req.params.isbn});
+
+    const getSpecificBook = await BookModel.findOne({ ISBN: req.params.isbn });
 
     if (!getSpecificBook) {
         return res.json({
@@ -74,7 +74,7 @@ shapeAI.get("/c/:category", async (req, res) => {
     const getSpecificBooks = await BookModel.findOne({
         category: req.params.category,
     });
-    
+
 
     if (!getSpecificBooks.length) {
         return res.json({
@@ -228,9 +228,9 @@ shapeAI.get("/publications/i/:isbn", (req, res) => {
     shapeAI.post("/book/new", async (req, res) => {
         const { newBook } = req.body;
 
-         BookModel.create(newBook);
+        BookModel.create(newBook);
 
-        return res.json({  message: "book was added!" });
+        return res.json({ message: "book was added!" });
     });
 
 /* 
@@ -246,7 +246,7 @@ shapeAI.post("/author/new", async (req, res) => {
 
     AuthorModel.create(newAuthor);
 
-    return res.json({  message: "author was added!" });
+    return res.json({ message: "author was added!" });
 
 });
 
@@ -280,13 +280,13 @@ shapeAI.put("/book/update/:isbn", async (req, res) => {
     const updatedBook = await BookModel.findOneAndUpdate({
         ISBN: req.params.isbn
     },
-    {
-        title: req.body.bookTitle,
-    },
-    {
-        new: true,
-    });
-    
+        {
+            title: req.body.bookTitle,
+        },
+        {
+            new: true,
+        });
+
     return res.json({ books: updatedBook });
 });
 
@@ -299,21 +299,47 @@ Method           PUT
 */
 shapeAI.put("/book/author/update/:isbn", (req, res) => {
     //update the book database
-    database.books.forEach((book) => {
-        if (book.ISBN === req.params.isbn) {
-            return book.authors.push(req.body.newAuthor);
+
+    const updatedBook = await BookModel.findOneAndUpdate(
+        {
+            ISBN: req.params.isbn,
+
+        },
+        {
+            $addToSet: {
+                authors: req.body.newAuthor,
+            }
+        },
+        {
+            new: true,
         }
-    });
+    );
+    //database.books.forEach((book) => {
+    //if (book.ISBN === req.params.isbn) {
+    // return book.authors.push(req.body.newAuthor);
+    // }
+    //});
 
     //update author database
-    database.authors.forEach((author) => {
-        if (author.id === req.body.newAuthor) {
-            return author.books.push(req.params.isbn);
-        }
-    });
+    const updatedAuthor = await AuthorModel.findOneAndUpdate(
+        {
+            id: req.body.newAuthor,
+        },
+        {
+            books: req.param.author,
+        },
+        {
+            new: true,
+        },
+    );
+    //database.authors.forEach((author) => {
+    // if (author.id === req.body.newAuthor) {
+    //  return author.books.push(req.params.isbn);
+    //  }
+    //});
     return res.json({
-        books: database.books,
-        authors: database.authors,
+        books: updatedBook,
+        authors: updatedAuthor,
         message: "New author was added🚀",
     });
 });
@@ -389,12 +415,15 @@ Access           PUBLIC
 Parameters       isbn
 Method           DELETE
 */
-shapeAI.delete("/book/delete/:isbn", (req, res) => {
-    const updatedBookDatabase = database.books.filter(
-        (book) => book.ISBN !== req.params.isbn
-    );
-    database.books = updatedBookDatabase;
-    return res.json({ books: database.books });
+shapeAI.delete("/book/delete/:isbn", async (req, res) => {
+    const updatedBookDatabase = await BookModel.findOneAndDelete({
+        ISBN: req.params.isbn,
+    });
+    //const updatedBookDatabase = database.books.filter(
+    // (book) => book.ISBN !== req.params.isbn
+    // );
+    //database.books = updatedBookDatabase;
+    return res.json({ books: updatedBookDatabase });
 });
 
 /* 
