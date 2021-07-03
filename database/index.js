@@ -9,15 +9,14 @@ let books = [
       category: ["fiction", "programming", "tech", "web dev"],
       publication: 1,
     },
-    //another book
     {
       ISBN: "12345TWO",
       title: "Getting started with Python",
-      authors: [2],
+      authors: [1,2],
       language: "en",
       pubDate: "2021-07-07",
       numOfPage: 225,
-      category: ["fiction", "programming", "tech", "web dev"],
+      category: ["fiction", "tech", "web dev"],
       publication: 1,
     },
   ];
@@ -25,12 +24,12 @@ let books = [
   const authors = [
     {
       id: 1,
-      name: "pavan",
-      books: ["12345ONE"],
+      name: "shalini",
+      books: ["12345ONE","12345TWO"],
     },
     {
       id: 2,
-      name: "Deepak",
+      name: "deepak",
       books: ["12345ONE","12345TWO"],
     },
   ];
@@ -39,6 +38,11 @@ let books = [
       id: 1,
       name: "Chakra",
       books: ["12345ONE","12345TWO"],
+    },
+    {
+      id: 2,
+      name: "Vickie Publications",
+      books: [],
     },
   ];
   
