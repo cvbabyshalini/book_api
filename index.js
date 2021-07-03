@@ -18,8 +18,6 @@ const shapeAI = express();
 // Configurations
 shapeAI.use(express.json());
 
-console.log(process.env.MONGO_URL);
-
 // Establish database connection
 mongoose
     .connect(process.env.MONGO_URL,
@@ -94,14 +92,17 @@ Access           PUBLIC
 Parameters       author
 Method           GET
 */
-shapeAI.get("/a/:authors", (req, res) => {
-    const getSpecificAuthorBooks = database.books.filter(
-        (book) => book.authors.includes(parseInt(req.params.authors)),
-    );
+shapeAI.get("/a/:authorsid", async (req, res) => {
+    const getSpecificAuthorBooks = await BookModel.findOne({
+        authors: parseInt(req.params.authorsid),
+    });
+    //const getSpecificAuthorBooks = database.books.filter(
+    //    (book) => book.authors.includes(parseInt(req.params.authors)),
+    //);
 
-    if (getSpecificAuthorBooks.length === 0) {
+    if (!getSpecificAuthorBooks) {
         return res.json({
-            error: `No book found with the author name ${req.params.author}`,
+            error: `No book found with the author id ${req.params.authorsid}`,
         });
     }
 
@@ -130,12 +131,12 @@ Parameters       name
 Method           GET
 */
 
-shapeAI.get("/author/n/:name", (req, res) => {
-    const getSpecificAuthor = database.authors.filter(
-        (author) => author.name === req.params.name
-    );
+shapeAI.get("/author/n/:name", async (req, res) => {
+    const getSpecificAuthor = await AuthorModel.findOne({
+         name: req.params.name,
+    });
 
-    if (getSpecificAuthor.length === 0) {
+    if (!getSpecificAuthor) {
         return res.json({
             error: `No author found for the name of ${req.params.name}`,
         });
@@ -152,12 +153,12 @@ Parameters       isbn
 Method           GET
 */
 
-shapeAI.get("/author/i/:isbn", (req, res) => {
-    const getSpecificAuthors = database.authors.filter((author) =>
-        author.books.includes(req.params.isbn)
-    );
+shapeAI.get("/author/i/:isbn", async (req, res) => {
+    const getSpecificAuthors = await AuthorModel.findOne({
+         books: req.params.isbn,
+    });
 
-    if (getSpecificAuthors.length === 0) {
+    if (!getSpecificAuthors) {
         return res.json({
             error: `No author found for the book ${req.params.isbn}`,
         });
@@ -185,12 +186,12 @@ Access           PUBLIC
 Parameters       name
 Method           GET
 */
-shapeAI.get("/publications/n/:name", (req, res) => {
-    const getSpecificPublication = database.publications.filter(
-        (publication) => publication.name === req.params.name
-    );
+shapeAI.get("/publications/n/:name", async (req, res) => {
+    const getSpecificPublication = await PublicationModel.findOne({
+        name: req.params.name,
+    });
 
-    if (getSpecificPublication.length === 0) {
+    if (!getSpecificPublication) {
         return res.json({
             error: `No publication found for the name of ${req.params.name}`,
         });
@@ -207,12 +208,12 @@ Access           PUBLIC
 Parameters       isbn
 Method           GET
 */
-shapeAI.get("/publications/i/:isbn", (req, res) => {
-    const getSpecificPublications = database.publications.filter((publications) =>
-        publications.books.includes(req.params.isbn)
-    );
+shapeAI.get("/publications/i/:isbn", async (req, res) => {
+    const getSpecificPublications = await PublicationModel.findOne({
+         books: req.params.isbn,
+    });
 
-    if (getSpecificPublications.length === 0) {
+    if (!getSpecificPublications) {
         return res.json({
             error: `No publicaion found for the book's isbn ${req.params.isbn}`,
         });
@@ -308,7 +309,7 @@ Access           PUBLIC
 Parameters       isbn
 Method           PUT
 */
-shapeAI.put("/book/author/update/:isbn", (req, res) => {
+shapeAI.put("/book/author/update/:isbn", async (req, res) => {
     //update the book database
 
     const updatedBook = await BookModel.findOneAndUpdate(
@@ -368,7 +369,7 @@ Method           PUT
 shapeAI.put("/author/update/:isbn", async (req, res) => {
     const updatedAuthor = await AuthorModel.findOneAndUpdate(
         {
-            ISBN: req.params.isbn,
+            books: req.params.isbn,
         },
         {
             name: req.body.authorName,
@@ -397,7 +398,7 @@ Method           PUT
 shapeAI.put("/publication/update/:isbn",async (req, res) => {
     const updatedPublication = await PublicationModel.findOneAndUpdate(
         {
-            ISBN: req.params.isbn,
+            books: req.params.isbn,
         },
         {
             name: req.body.publicationName,
@@ -422,24 +423,50 @@ Access           PUBLIC
 Parameters       isbn
 Method           PUT
 */
-shapeAI.put("/publication/update/book/:isbn", (req, res) => {
+shapeAI.put("/publication/update/book/:isbn/:pubID", async (req, res) => {
     // update the publication database
-    database.publications.forEach((publication) => {
-        if (publication.id === req.body.pubId) {
-            return publication.books.push(req.params.isbn);
+    const updatedPublication = await PublicationModel.findOneAndUpdate(
+        {
+            id: req.params.pubID,
+        },
+        {
+            $addToSet:{
+                books: req.params.isbn,
+            },
+        },
+        {
+            new: true,
         }
-    });
+    );
+    //database.publications.forEach((publication) => {
+    //    if (publication.id === req.body.pubId) {
+    //        return publication.books.push(req.params.isbn);
+    //    }
+    //});
     // update the book database
-    database.books.forEach((book) => {
-        if (book.ISBN === req.params.isbn) {
-            book.publication = req.body.pubId;
-            return;
+    const updatedBook = await BookModel.findOneAndUpdate(
+        {
+            ISBN: req.params.isbn,
+        },
+        {
+            $set:{
+            publication: req.params.pubId,
+            },
+        },
+        {
+            new: true,
         }
-    });
+    );
+    //database.books.forEach((book) => {
+    //    if (book.ISBN === req.params.isbn) {
+    //        book.publication = req.body.pubId;
+    //        return;
+    //    }
+    //});
     return res.json({
-        books: database.books,
-        publications: database.publications,
         message: "successfully updated publications",
+        books: updatedBook,
+        publications: updatedPublication,
     });
 });
 
@@ -470,7 +497,7 @@ Method           DELETE
 */
 shapeAI.delete("/book/delete/author/:isbn/:authorId", async (req, res) => {
     // update the book database
-    const updatedBook = await BookModel.findByIdAndUpdate(
+    const updatedBook = await BookModel.findOneAndUpdate(
         {
             ISBN: req.params.isbn,
         },
@@ -519,6 +546,24 @@ shapeAI.delete("/book/delete/author/:isbn/:authorId", async (req, res) => {
         author: updatedAuthor,
     });
 });
+
+/* 
+Route            /author/delete
+Description      delete an author
+Access           PUBLIC
+Parameters       name
+Method           DELETE
+*/
+shapeAI.delete("/author/delete/:name", async (req, res) => {
+    const updatedAuthorDatabase = await AuthorModel.findOneAndDelete({
+        name: req.params.name,
+    });
+    //const updatedAuthorDatabase = database.authors.filter(
+    // (author) => author.name !== req.params.name
+    // );
+    //database.authors = updatedAuthorDatabase;
+    return res.json({ authors: updatedAuthorDatabase });
+});
 /* 
 Route            /publication/delete/book
 Description      delete a book from publication
@@ -526,31 +571,73 @@ Access           PUBLIC
 Parameters       isbn, publication id
 Method           DELETE
 */
-shapeAI.delete("/publication/delete/book/:isbn/:pubId", (req, res) => {
+shapeAI.delete("/publication/delete/book/:isbn/:pubId", async (req, res) => {
     // update publication database
-    database.publications.forEach((publication) => {
-        if (publication.id === parseInt(req.params.pubId)) {
-            const newBooksList = publication.books.filter(
-                (book) => book !== req.params.isbn
-            );
-
-            publication.books = newBooksList;
-            return;
+    const updatedPublication = await PublicationModel.findOneAndUpdate(
+        {
+            id: parseInt(req.params.pubId),
+        },
+        {
+            $pull:{
+                books: req.params.isbn,
+            },
+        },
+        {
+            new: true,
         }
-    });
+    );
+    //database.publications.forEach((publication) => {
+    //    if (publication.id === parseInt(req.params.pubId)) {
+    //        const newBooksList = publication.books.filter(
+    //            (book) => book !== req.params.isbn
+    //        );
+
+    //        publication.books = newBooksList;
+    //        return;
+    //    }
+    //});
 
     // update book database
-    database.books.forEach((book) => {
-        if (book.ISBN === req.params.isbn) {
-            book.publication = 0; // no publication available
-            return;
+    const updatedBook = await BookModel.findOneAndUpdate(
+        {
+            ISBN: req.params.isbn,
+        },
+        {
+            publication: 0,
+        },
+        {
+            new: true,
         }
-    });
+    );
+    //database.books.forEach((book) => {
+    //    if (book.ISBN === req.params.isbn) {
+    //        book.publication = 0; // no publication available
+    //        return;
+    //    }
+    //});
 
     return res.json({
-        books: database.books,
-        publications: database.publications,
+        books: updatedBook,
+        publications: updatedPublication,
     });
+});
+
+/* 
+Route            /publication/delete
+Description      delete a publication
+Access           PUBLIC
+Parameters       name
+Method           DELETE
+*/
+shapeAI.delete("/publication/delete/:name", async (req, res) => {
+    const updatedPublicationDatabase = await PublicationModel.findOneAndDelete({
+        name: req.params.name,
+    });
+    //const updatedPublicationDatabase = database.publications.filter(
+    // (publication) => publication.name !== req.params.name
+    // );
+    //database.publicationss = updatedPublicationDatabase;
+    return res.json({ publications: updatedPublicationDatabase });
 });
 
 shapeAI.listen(3000, () => console.log("Server running!!😎"));
