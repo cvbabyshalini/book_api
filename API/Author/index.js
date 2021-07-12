@@ -71,7 +71,7 @@ Method           POST
 Router.post("/new", async (req, res) => {
     const { newAuthor } = req.body;
 
-    AuthorModel.create(newAuthor);
+    await AuthorModel.create(newAuthor);
 
     return res.json({ message: "author was added!" });
 

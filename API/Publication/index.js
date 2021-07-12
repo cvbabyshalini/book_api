@@ -68,7 +68,7 @@ Method           POST
 Router.post("/new", async (req, res) => {
 const { newPublication } = req.body;
 
-PublicationModel.create(newPublication);
+await PublicationModel.create(newPublication);
 
 return res.json({ message: "publication was added!" });
 
